@@ -27,7 +27,7 @@ module.exports.registerUser = async (event) => {
     console.error(err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: "Error registering user" }),
+      body: JSON.stringify({ message: "Error in registering user!" }),
     };
   }
 };
