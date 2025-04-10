@@ -30,7 +30,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token	: ${{ secrets.AWS_SECRET_TOKEN }}
           aws-region: us-east-1
-
+      - name: Deploy using Serverless version
+        run: serverless --version
       - name: Deploy using Serverless
         run: serverless deploy
 
