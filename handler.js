@@ -21,7 +21,7 @@ module.exports.registerUser = async (event) => {
     await dynamoDb.put(params).promise();
     return {
       statusCode: 201,
-      body: JSON.stringify({ message: "User registered successfully😀" }),
+      body: JSON.stringify({ message: "User registered successfully" }),
     };
   } catch (err) {
     console.error(err);
