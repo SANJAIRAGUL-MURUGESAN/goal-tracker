@@ -1,0 +1,19 @@
+# Node dependencies
+node_modules/
+
+# Serverless artifacts
+.serverless/
+.webpack/
+
+# Logs
+*.log
+
+# Local env vars
+.env
+
+# macOS system files
+.DS_Store
+
+# IDE/editor settings
+.vscode/
+.idea/
