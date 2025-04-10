@@ -33,5 +33,5 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy using Serverless
-        run: serverless deploy --stage prod
+        run: serverless deploy
 
