@@ -1,0 +1,166 @@
+service: goal-tracker-app
+frameworkVersion: '>=3.0.0 <4.0.0'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    USERS_TABLE: users-table
+    GOALS_TABLE: goals-table
+    SNS_TOPIC_ARN: arn:aws:sns:us-east-1:<your-account-id>:goal-notify
+
+functions:
+  registerUser:
+    handler: handler.registerUser
+    role: RegisterUserLambdaRole
+    events:
+      - http:
+          path: register
+          method: post
+          cors: true
+
+  loginUser:
+    handler: handler.loginUser
+    role: LoginUserLambdaRole
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
+
+  addGoal:
+    handler: handler.addGoal
+    role: AddGoalLambdaRole
+    events:
+      - http:
+          path: goals
+          method: post
+          cors: true
+
+  assignGoal:
+    handler: handler.assignGoal
+    role: AssignGoalLambdaRole
+    events:
+      - http:
+          path: assign-goal
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    # DynamoDB Tables
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.USERS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    GoalsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.GOALS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: goalId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: goalId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    # IAM Roles per Lambda
+    RegisterUserLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: register-user-role-${opt:stage, 'dev'}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: WriteUsersTable
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:PutItem
+                  Resource:
+                    - arn:aws:dynamodb:${opt:region, self:provider.region}:${aws:accountId}:table/users-table
+
+    LoginUserLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: login-user-role-${opt:stage, 'dev'}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: ReadUsersTable
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:GetItem
+                  Resource:
+                    - arn:aws:dynamodb:${opt:region, self:provider.region}:${aws:accountId}:table/users-table
+
+    AddGoalLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: add-goal-role-${opt:stage, 'dev'}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: WriteGoalsTable
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:PutItem
+                  Resource:
+                    - arn:aws:dynamodb:${opt:region, self:provider.region}:${aws:accountId}:table/goals-table
+
+    AssignGoalLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: assign-goal-role-${opt:stage, 'dev'}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: ReadGoalsTable
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:GetItem
+                    - dynamodb:Scan
+                    - dynamodb:Query
+                  Resource:
+                    - arn:aws:dynamodb:${opt:region, self:provider.region}:${aws:accountId}:table/goals-table
